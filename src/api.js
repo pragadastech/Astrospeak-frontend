@@ -1,4 +1,10 @@
 const TAB_KEY = 'astro.tab'
+const API_BASE = String(import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
+function requestUrl(url) {
+  if (!API_BASE || /^https?:\/\//i.test(url)) return url
+  return API_BASE + (url.startsWith('/') ? url : '/' + url)
+}
 
 export function tabToken() {
   try { return sessionStorage.getItem(TAB_KEY) || '' } catch { return '' }
@@ -18,7 +24,7 @@ export async function api(url, opts = {}) {
   if (!(opts.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
   const token = tabToken()
   if (token && !headers.has('Authorization')) headers.set('Authorization', 'Bearer ' + token)
-  const res = await fetch(url, {
+  const res = await fetch(requestUrl(url), {
     ...opts,
     credentials: 'omit',
     headers,
