@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { Wordmark } from './Brand'
 
 export function Stage() {
   const { pathname } = useLocation()
@@ -37,7 +38,7 @@ export function Stage() {
           s.p += 0.03
           if (s.y < -10) { s.y = h + 10; s.x = Math.random() * w }
           ctx.globalAlpha = 0.3 + Math.sin(s.p) * 0.25
-          ctx.fillStyle = '#f97316'
+          ctx.fillStyle = '#ff6a00'
           ctx.beginPath()
           ctx.arc(s.x, s.y, s.r, 0, 6.283)
           ctx.fill()
@@ -65,7 +66,7 @@ export function Stage() {
       <div className="cursor-glow" ref={glow} />
       {curtain !== 'gone' && (
         <>
-          <div className="curtain-logo"><div>Astrogreet</div></div>
+          <div className="curtain-logo"><div><Wordmark light /></div></div>
           <div className="curtain"><span /><span /><span /><span /><span /></div>
         </>
       )}

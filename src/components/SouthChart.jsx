@@ -4,12 +4,12 @@ const SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', '
 export default function SouthChart({ chart }) {
   let center = false
   return (
-    <div className="si-chart" aria-label="Scientific chart">
+    <div className="si-chart" aria-label="Vedic chart">
       {ORDER.map((sign, i) => {
         if (sign === null) {
           if (center) return null
           center = true
-          return <div className="center" key="center"><div><strong>Scientific Chart</strong><small>Sidereal · Placidus</small></div></div>
+          return <div className="center" key="center"><div><strong>Vedic Chart</strong><small>Sidereal · Placidus</small></div></div>
         }
         return (
           <div className={sign === chart.ascendant.signIdx ? 'cell asc' : 'cell'} key={sign}>

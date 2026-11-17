@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import Brand from './Brand'
 
 export default function Nav({ user }) {
   const [scrolled, setScrolled] = useState(false)
@@ -13,13 +14,13 @@ export default function Nav({ user }) {
   return (
     <header className={scrolled ? 'nav scrolled' : 'nav'}>
       <div className="wrap">
-        <Link className="brand" to="/" onClick={() => setOpen(false)}><span className="logo"><span>☀</span></span> Astrogreet</Link>
+        <Brand onClick={() => setOpen(false)} />
         <button className="burger" type="button" aria-label="Menu" onClick={() => setOpen((v) => !v)}>☰</button>
         <nav>
           <ul className={open ? 'nav-links open' : 'nav-links'} onClick={() => setOpen(false)}>
             <li><NavLink to="/pricing">Plans</NavLink></li>
             {user ? <li><NavLink to={user.role === 'CLIENT' ? '/app' : '/admin'}>Portal</NavLink></li> : <li><NavLink to="/login">Sign in</NavLink></li>}
-            {!user && <li><a href="/#start">Check your chart</a></li>}
+            {!user && <li><a href="/#start">Get guidance</a></li>}
           </ul>
         </nav>
       </div>

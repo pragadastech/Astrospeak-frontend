@@ -19,20 +19,20 @@ export default function Wheel() {
       <svg className="wheel" viewBox="0 0 400 400">
         <defs>
           <linearGradient id="wheelGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ea580c" />
-            <stop offset="1" stopColor="#f59e0b" />
+            <stop offset="0" stopColor="#111111" />
+            <stop offset="1" stopColor="#ff6a00" />
           </linearGradient>
         </defs>
         <circle cx="200" cy="200" r="195" fill="none" stroke="url(#wheelGrad)" strokeWidth="4" />
-        <circle cx="200" cy="200" r="150" fill="none" stroke="#fdba74" strokeWidth="2" strokeDasharray="4 6" />
-        {spokes.map((s, i) => <line key={i} {...s} stroke="#fdba74" strokeWidth="2" />)}
-        {glyphs.map((g, i) => <text key={i} x={g.x} y={g.y} fontSize="26" fill="#c2410c" textAnchor="middle" dominantBaseline="middle">{GLYPHS[i]}</text>)}
+        <circle cx="200" cy="200" r="150" fill="none" stroke="#111111" strokeWidth="2" strokeDasharray="4 6" />
+        {spokes.map((s, i) => <line key={i} {...s} stroke="#ffb07a" strokeWidth="2" />)}
+        {glyphs.map((g, i) => <text key={i} x={g.x} y={g.y} fontSize="26" fill="#111111" textAnchor="middle" dominantBaseline="middle">{GLYPHS[i]}</text>)}
       </svg>
       <svg className="wheel inner" viewBox="0 0 400 400">
-        <circle cx="200" cy="200" r="195" fill="none" stroke="#f59e0b" strokeWidth="3" strokeDasharray="2 10" />
-        {stars.map((s, i) => <text key={i} x={s.x} y={s.y} fontSize="15" fill="#9a3412" textAnchor="middle" dominantBaseline="middle">✦</text>)}
+        <circle cx="200" cy="200" r="195" fill="none" stroke="#ff6a00" strokeWidth="3" strokeDasharray="2 10" />
+        {stars.map((s, i) => <text key={i} x={s.x} y={s.y} fontSize="15" fill="#ff6a00" textAnchor="middle" dominantBaseline="middle">✦</text>)}
       </svg>
-      <div className="wheel-core">Chart</div>
+      <div className="wheel-core">Vedic</div>
       <div className="orbit-dot" />
     </div>
   )

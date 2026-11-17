@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import { Wordmark } from '../components/Brand'
 
 export default function Login() {
   const nav = useNavigate()
@@ -17,7 +18,7 @@ export default function Login() {
   }
   return (
     <div className="auth-page">
-      <div className="auth-art"><div><h1>Astrogreet</h1><p>Sign in to your chart, your family profiles, and your reports.</p></div></div>
+      <div className="auth-art"><div><h1><Wordmark light /></h1><p>Vedic astrology, daily wishes & expert guidance.</p></div></div>
       <div className="auth-form">
         <form className="login-card" onSubmit={submit}>
           <h2>Sign in</h2>
@@ -25,7 +26,7 @@ export default function Login() {
           <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" /></label>
           <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></label>
           <button className="btn" type="submit">Sign in</button>
-          <p className="foot">New here? <Link to="/#start">Check your scientific chart</Link></p>
+          <p className="foot">New here? <Link to="/#start">Get your Vedic guidance</Link></p>
         </form>
       </div>
     </div>

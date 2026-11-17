@@ -140,7 +140,7 @@ export default function ChartSheet({ chart, profile }) {
   return (
     <div className="sheet">
       <div className="section-head">
-        <h2>Scientific Chart{profile ? ` — ${profile.fullName}` : ''}</h2>
+        <h2>Vedic Chart{profile ? ` — ${profile.fullName}` : ''}</h2>
         <div className="divider" />
         {profile && <p>{spokenDate(profile.dob)} · {profile.tob} · {profile.city}</p>}
         <p>{chart.ascendant.sign} rising {chart.ascendant.dms} · Moon in {chart.moonSign}, {chart.nakshatra} · Sun in {chart.sunSign}</p>

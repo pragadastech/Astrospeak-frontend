@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import Brand from '../components/Brand'
 import { api, clearTab, inr, moneyMinor, spokenDate, to24, usd } from '../api'
 import BirthFields, { birthPayload, emptyBirth } from '../components/BirthFields'
 import PlanGrid from '../components/PlanGrid'
 import ChartSheet from '../components/ChartSheet'
 
-const TABS = [['home', 'Dashboard'], ['chat', 'Ask'], ['reports', 'My Reports'], ['profiles', 'Family'], ['chart', 'Scientific Chart'], ['consult', 'Live session'], ['account', 'My Profile']]
+const TABS = [['home', 'Dashboard'], ['chat', 'Ask'], ['reports', 'My Reports'], ['profiles', 'Family'], ['chart', 'Vedic Chart'], ['consult', 'Expert guidance'], ['account', 'My Profile']]
 
 export default function ClientApp() {
   const nav = useNavigate()
@@ -32,7 +33,7 @@ export default function ClientApp() {
   return (
     <div className="wrap">
       <header className="row" style={{ justifyContent: 'space-between', paddingTop: 18 }}>
-        <Link className="brand" to="/"><span className="logo">☀</span> Astrogreet</Link>
+        <Brand />
         <span className="muted">{user.fullName} · {user.accountType === 'FAMILY' ? 'Family account' : 'Individual account'}</span>
       </header>
       <div className="tabs">

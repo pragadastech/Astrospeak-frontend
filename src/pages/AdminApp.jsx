@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import Brand from '../components/Brand'
 import { api, clearTab, moneyMinor, spokenDate } from '../api'
 
 export default function AdminApp() {
@@ -12,7 +13,7 @@ export default function AdminApp() {
   return (
     <div className="admin-shell">
       <aside className="admin-side">
-        <Link className="brand" to="/"><span className="logo"><span>☀</span></span> Astrogreet</Link>
+        <Brand light />
         <p className="side-who">{me.fullName}<br /><small>{me.role}</small></p>
         <nav>
           {tabs.map(([id, label]) => <button key={id} type="button" className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}

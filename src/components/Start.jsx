@@ -110,15 +110,15 @@ export default function Start() {
       <div className="wrap">
         <div className="section-head">
           <span className="tag">Begin</span>
-          <h2>Check your scientific chart</h2>
+          <h2>Begin with Vedic guidance</h2>
           <div className="divider" />
-          <p>Enter your name, phone, email and birth details here. The account is created for you, and the sign-in details are emailed.</p>
+          <p>Share your name, phone, email and birth details. Your account is created for you, and the sign-in details are emailed.</p>
         </div>
         {step === 'form' && (
           <form className="form-card" onSubmit={createAccount}>
             <div className="choice" role="group" aria-label="What you want">
-              <button type="button" className={intent === 'chart' ? 'on' : ''} onClick={() => choose('chart')}>Check your chart</button>
-              <button type="button" className={intent === 'future' ? 'on' : ''} onClick={() => choose('future')}>Ask about your future</button>
+              <button type="button" className={intent === 'chart' ? 'on' : ''} onClick={() => choose('chart')}>Vedic chart</button>
+              <button type="button" className={intent === 'future' ? 'on' : ''} onClick={() => choose('future')}>Daily wishes</button>
             </div>
             <div className="grid-2">
               <label>Full name<input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required /></label>
@@ -175,7 +175,7 @@ export default function Start() {
             <h3>Your account is created</h3>
             <p>We sent an email to <b>{done.email}</b> with your sign-in details.</p>
             {done.password && <p className="info">The mailbox is not connected yet, so keep this password: <strong>{done.password}</strong></p>}
-            <button className="btn" type="button" onClick={() => nav('/app?tab=chart')}>Open your scientific chart</button>
+            <button className="btn" type="button" onClick={() => nav('/app?tab=chart')}>Open your Vedic chart</button>
           </div>
         )}
         {step === 'done' && intent === 'future' && (
