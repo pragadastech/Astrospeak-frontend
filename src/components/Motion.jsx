@@ -65,7 +65,7 @@ export function Stage() {
       <div className="cursor-glow" ref={glow} />
       {curtain !== 'gone' && (
         <>
-          <div className="curtain-logo"><div>Astrology Talk</div></div>
+          <div className="curtain-logo"><div>Astrogreet</div></div>
           <div className="curtain"><span /><span /><span /><span /><span /></div>
         </>
       )}

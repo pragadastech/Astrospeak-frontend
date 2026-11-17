@@ -12,7 +12,7 @@ export default function AdminApp() {
   return (
     <div className="admin-shell">
       <aside className="admin-side">
-        <Link className="brand" to="/"><span className="logo"><span>☀</span></span> Astrology Talk</Link>
+        <Link className="brand" to="/"><span className="logo"><span>☀</span></span> Astrogreet</Link>
         <p className="side-who">{me.fullName}<br /><small>{me.role}</small></p>
         <nav>
           {tabs.map(([id, label]) => <button key={id} type="button" className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}

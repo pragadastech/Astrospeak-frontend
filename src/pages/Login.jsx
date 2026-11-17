@@ -17,7 +17,7 @@ export default function Login() {
   }
   return (
     <div className="auth-page">
-      <div className="auth-art"><div><h1>Astrology Talk</h1><p>Sign in to your chart, your family profiles, and your reports.</p></div></div>
+      <div className="auth-art"><div><h1>Astrogreet</h1><p>Sign in to your chart, your family profiles, and your reports.</p></div></div>
       <div className="auth-form">
         <form className="login-card" onSubmit={submit}>
           <h2>Sign in</h2>

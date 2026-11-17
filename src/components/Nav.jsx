@@ -13,7 +13,7 @@ export default function Nav({ user }) {
   return (
     <header className={scrolled ? 'nav scrolled' : 'nav'}>
       <div className="wrap">
-        <Link className="brand" to="/" onClick={() => setOpen(false)}><span className="logo"><span>☀</span></span> Astrology Talk</Link>
+        <Link className="brand" to="/" onClick={() => setOpen(false)}><span className="logo"><span>☀</span></span> Astrogreet</Link>
         <button className="burger" type="button" aria-label="Menu" onClick={() => setOpen((v) => !v)}>☰</button>
         <nav>
           <ul className={open ? 'nav-links open' : 'nav-links'} onClick={() => setOpen(false)}>

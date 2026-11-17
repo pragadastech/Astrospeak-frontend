@@ -32,7 +32,7 @@ export default function ClientApp() {
   return (
     <div className="wrap">
       <header className="row" style={{ justifyContent: 'space-between', paddingTop: 18 }}>
-        <Link className="brand" to="/"><span className="logo">☀</span> Astrology Talk</Link>
+        <Link className="brand" to="/"><span className="logo">☀</span> Astrogreet</Link>
         <span className="muted">{user.fullName} · {user.accountType === 'FAMILY' ? 'Family account' : 'Individual account'}</span>
       </header>
       <div className="tabs">

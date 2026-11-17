@@ -105,7 +105,7 @@ export default function Home() {
           <PlanGrid plans={plans} />
         </div>
       </section>
-      <footer><div className="wrap">© {new Date().getFullYear()} Astrology Talk · Guidance from the chart, not a substitute for professional advice.</div></footer>
+      <footer><div className="wrap">© {new Date().getFullYear()} Astrogreet · Guidance from the chart, not a substitute for professional advice.</div></footer>
     </>
   )
 }
