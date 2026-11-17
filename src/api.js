@@ -1,9 +1,11 @@
 const TAB_KEY = 'astro.tab'
-const API_BASE = String(import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+const API_CANDIDATES = [import.meta.env.VITE_API_URL, import.meta.env.VITE_API_URL_FALLBACK]
+  .map((value) => String(value || '').replace(/\/$/, ''))
+  .filter((value, index, all) => value && all.indexOf(value) === index)
 
-function requestUrl(url) {
-  if (!API_BASE || /^https?:\/\//i.test(url)) return url
-  return API_BASE + (url.startsWith('/') ? url : '/' + url)
+function requestUrl(url, base) {
+  if (!base || /^https?:\/\//i.test(url)) return url
+  return base + (url.startsWith('/') ? url : '/' + url)
 }
 
 export function tabToken() {
@@ -24,12 +26,21 @@ export async function api(url, opts = {}) {
   if (!(opts.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
   const token = tabToken()
   if (token && !headers.has('Authorization')) headers.set('Authorization', 'Bearer ' + token)
-  const res = await fetch(requestUrl(url), {
-    ...opts,
-    credentials: 'omit',
-    headers,
-    body: opts.body instanceof FormData ? opts.body : opts.body ? JSON.stringify(opts.body) : undefined,
-  })
+  const bases = API_CANDIDATES.length ? API_CANDIDATES : ['']
+  let res
+  for (let i = 0; i < bases.length; i++) {
+    try {
+      res = await fetch(requestUrl(url, bases[i]), {
+        ...opts,
+        credentials: 'omit',
+        headers,
+        body: opts.body instanceof FormData ? opts.body : opts.body ? JSON.stringify(opts.body) : undefined,
+      })
+      break
+    } catch (err) {
+      if (i === bases.length - 1) throw err
+    }
+  }
   if (String(url).endsWith('/api/auth/logout')) clearTab()
   const text = await res.text()
   const data = text ? JSON.parse(text) : {}
