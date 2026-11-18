@@ -10,15 +10,21 @@ export default function AdminApp() {
   useEffect(() => { api('/api/auth/me').then((u) => { if (u.role === 'CLIENT') nav('/app'); else setMe(u) }).catch(() => nav('/login')) }, [])
   if (!me) return <p className="wrap">Loading the admin portal…</p>
   const tabs = [['overview', 'Overview'], ['customers', 'Customers'], ['employees', 'Employees'], ['consults', 'Consultations'], ['questions', 'Questions'], ['plans', 'Plans'], ['reports', 'Reports'], ['notes', 'Notifications'], ['settings', 'Settings']]
+  async function logout() {
+    try { await api('/api/auth/logout', { method: 'POST' }) } catch { clearTab() }
+    nav('/')
+  }
   return (
-    <div className="admin-shell">
+    <div className="admin-shell portal-shell">
+      <header className="portal-head">
+        <button className="btn sm ghost" type="button" onClick={logout}>Log out</button>
+      </header>
       <aside className="admin-side">
         <Brand light />
         <p className="side-who">{me.fullName}<br /><small>{me.role}</small></p>
         <nav>
           {tabs.map(([id, label]) => <button key={id} type="button" className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}
         </nav>
-        <button className="side-out" type="button" onClick={async () => { try { await api('/api/auth/logout', { method: 'POST' }) } catch { clearTab() } nav('/') }}>Log out</button>
       </aside>
       <main className="admin-main">
         {tab === 'overview' && <Overview />}

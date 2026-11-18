@@ -29,31 +29,40 @@ export default function ClientApp() {
 
   if (!dash) return <p className="wrap">Loading your account…</p>
   const profiles = dash.profiles || []
+  async function logout() {
+    try { await api('/api/auth/logout', { method: 'POST' }) } catch { clearTab() }
+    nav('/')
+  }
 
   return (
-    <div className="wrap">
-      <header className="row" style={{ justifyContent: 'space-between', paddingTop: 18 }}>
-        <Brand />
-        <span className="muted">{user.fullName} · {user.accountType === 'FAMILY' ? 'Family account' : 'Individual account'}</span>
+    <div className="admin-shell portal-shell">
+      <header className="portal-head">
+        <button className="btn sm ghost" type="button" onClick={logout}>Log out</button>
       </header>
-      <div className="tabs">
-        {TABS.map(([id, label]) => <button key={id} className={tab === id ? 'on' : ''} onClick={() => { setErr(''); setTab(id) }}>{label}</button>)}
-      </div>
-      {profiles.length > 1 && tab !== 'account' && tab !== 'consult' && (
-        <label>Person
-          <select value={profileId} onChange={(e) => setProfileId(e.target.value)}>
-            {profiles.map((p) => <option key={p.id} value={p.id}>{p.fullName} · {p.relation}</option>)}
-          </select>
-        </label>
-      )}
-      {err && <p className="err">{err}</p>}
-      {tab === 'home' && <Home dash={dash} />}
-      {tab === 'chat' && <Chat profileId={profileId} />}
-      {tab === 'reports' && <Reports dash={dash} profileId={profileId} reload={load} />}
-      {tab === 'profiles' && <Profiles reload={load} />}
-      {tab === 'chart' && <ChartTab profileId={profileId} profile={profiles.find((p) => p.id === profileId)} />}
-      {tab === 'consult' && <Consult user={user} profiles={profiles} dash={dash} reload={load} />}
-      {tab === 'account' && <Account user={user} />}
+      <aside className="admin-side">
+        <Brand light />
+        <p className="side-who">{user.fullName}<br /><small>{user.accountType === 'FAMILY' ? 'Family account' : 'Individual account'}</small></p>
+        <nav>
+          {TABS.map(([id, label]) => <button key={id} type="button" className={tab === id ? 'on' : ''} onClick={() => { setErr(''); setTab(id) }}>{label}</button>)}
+        </nav>
+      </aside>
+      <main className="admin-main">
+        {profiles.length > 1 && tab !== 'account' && tab !== 'consult' && (
+          <label className="portal-person">Person
+            <select value={profileId} onChange={(e) => setProfileId(e.target.value)}>
+              {profiles.map((p) => <option key={p.id} value={p.id}>{p.fullName} · {p.relation}</option>)}
+            </select>
+          </label>
+        )}
+        {err && <p className="err">{err}</p>}
+        {tab === 'home' && <Home dash={dash} />}
+        {tab === 'chat' && <Chat profileId={profileId} />}
+        {tab === 'reports' && <Reports dash={dash} profileId={profileId} reload={load} />}
+        {tab === 'profiles' && <Profiles reload={load} />}
+        {tab === 'chart' && <ChartTab profileId={profileId} profile={profiles.find((p) => p.id === profileId)} />}
+        {tab === 'consult' && <Consult user={user} profiles={profiles} dash={dash} reload={load} />}
+        {tab === 'account' && <Account user={user} />}
+      </main>
     </div>
   )
 }
@@ -266,7 +275,6 @@ function Consult({ user, profiles, dash, reload }) {
 }
 
 function Account({ user }) {
-  const nav = useNavigate()
   const [cur, setCur] = useState('')
   const [next, setNext] = useState('')
   const [msg, setMsg] = useState('')
@@ -280,10 +288,6 @@ function Account({ user }) {
       setCur(''); setNext('')
     } catch (ex) { setErr(ex.message) }
   }
-  async function logout() {
-    try { await api('/api/auth/logout', { method: 'POST' }) } catch { clearTab() }
-    nav('/')
-  }
   return (
     <section>
       <h2>My Profile</h2>
@@ -293,7 +297,7 @@ function Account({ user }) {
         {msg && <p className="ok">{msg}</p>}
         <label>Current password<input type="password" value={cur} onChange={(e) => setCur(e.target.value)} required /></label>
         <label>New password<input type="password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} required /></label>
-        <div className="row"><button className="btn" type="submit">Change password</button><button className="btn ghost" type="button" onClick={logout}>Log out</button></div>
+        <button className="btn" type="submit">Change password</button>
       </form>
     </section>
   )

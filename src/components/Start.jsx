@@ -65,16 +65,8 @@ export default function Start() {
     if (!birth.lat || birth.tz === '') { setErr('Pick the birth place from the suggestions so the time zone is set.'); return }
     setBusy(true)
     try {
-      const created = await api('/api/auth/start', { method: 'POST', body: { ...form, birth: birthPayload(birth) } })
-      if (intent === 'chart') {
-        setDone(created)
-        setStep('done')
-      } else {
-        setDone(created)
-        const list = await api('/api/plans')
-        setPlans(list.plans || [])
-        setStep(questions.length ? 'questions' : 'book')
-      }
+      await api('/api/auth/start', { method: 'POST', body: { ...form, birth: birthPayload(birth) } })
+      nav('/app')
     } catch (ex) { setErr(ex.message) }
     finally { setBusy(false) }
   }
@@ -112,7 +104,7 @@ export default function Start() {
           <span className="tag">Begin</span>
           <h2>Begin with Vedic guidance</h2>
           <div className="divider" />
-          <p>Share your name, phone, email and birth details. Your account is created for you, and the sign-in details are emailed.</p>
+          <p>Share your name, phone, email and birth details. Your account is created and you go straight into your portal. Your password is your mobile number.</p>
         </div>
         {step === 'form' && (
           <form className="form-card" onSubmit={createAccount}>
@@ -173,7 +165,7 @@ export default function Start() {
         {step === 'done' && intent === 'chart' && done && (
           <div className="card">
             <h3>Your account is created</h3>
-            <p>We sent an email to <b>{done.email}</b> with your sign-in details.</p>
+            <p>We sent an email to <b>{done.email}</b> with your sign-in details. Your password is your mobile number, digits only.</p>
             {done.password && <p className="info">The mailbox is not connected yet, so keep this password: <strong>{done.password}</strong></p>}
             <button className="btn" type="button" onClick={() => nav('/app?tab=chart')}>Open your Vedic chart</button>
           </div>
@@ -181,7 +173,7 @@ export default function Start() {
         {step === 'done' && intent === 'future' && (
           <div className="card">
             <h3>Your session is requested</h3>
-            <p>Your answers are with the astrologer. The meeting link arrives after the session is confirmed.</p>
+            <p>Your answers are with the astrologer. The meeting link arrives after the session is confirmed. Your password is your mobile number, digits only.</p>
             {done?.password && <p className="info">The mailbox is not connected yet, so keep this password: <strong>{done.password}</strong></p>}
             <Link className="btn" to="/app">Open your account</Link>
           </div>
