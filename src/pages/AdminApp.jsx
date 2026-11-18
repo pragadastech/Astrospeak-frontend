@@ -17,6 +17,7 @@ export default function AdminApp() {
   return (
     <div className="admin-shell portal-shell">
       <header className="portal-head">
+        <h1 className="portal-title">{tabs.find(([id]) => id === tab)?.[1]}</h1>
         <button className="btn sm ghost" type="button" onClick={logout}>Log out</button>
       </header>
       <aside className="admin-side">
