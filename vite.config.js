@@ -15,7 +15,13 @@ export default defineConfig({
     port: 5173,
     allowedHosts: siteHosts,
     cors: { origin: siteOrigins },
-    proxy: { '/api': 'http://localhost:8080' },
+    proxy: {
+      '/api': {
+        target: 'https://astrospeak-backend.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
   preview: {
     allowedHosts: siteHosts,
