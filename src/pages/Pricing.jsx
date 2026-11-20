@@ -13,10 +13,10 @@ export default function Pricing() {
   return (
     <>
       <Nav user={user} />
-      <section>
+      <section id="pricing-section">
         <div className="wrap">
           <div className="section-head">
-            <span className="tag">Pricing</span>
+            <span className="tag" id="pricing-tag">Pricing</span>
             <h2>Expert guidance</h2>
             <p>Vedic astrology, daily wishes and expert guidance. Choose India or the United States. Indian totals include 18% GST{data.businessState ? `, split inside ${data.businessState}` : ''}.</p>
           </div>

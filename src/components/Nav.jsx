@@ -1,15 +1,102 @@
 import { useEffect, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import Brand from './Brand'
 import { api } from '../api'
 
+// Fallback plans if backend api is down or empty
+const FALLBACK_PLANS = [
+  {
+    code: 'PLAN1',
+    name: 'Plan 1 — Chart Reading',
+    tagline: 'A focused first look at the main cusps.',
+    features: ['Main cusp analysis', '30-minute live session on Google Meet', 'Short written summary'],
+  },
+  {
+    code: 'PLAN2',
+    name: 'Guru Dakshina (In-depth Guidance)',
+    tagline: 'A long live session with remedies.',
+    features: ['1 hour 30 minute live session on Google Meet', 'In-depth analysis', 'Remedies and guidance'],
+    recommended: true,
+  },
+  {
+    code: 'PLAN3',
+    name: 'Plan 3 — Full Birth Chart',
+    tagline: 'The whole chart, relationships, and monthly questions.',
+    features: ['Full birth chart analysis', '1 hour 30 minute consultation', 'Relationship analysis', '2 queries every month'],
+  },
+  {
+    code: 'FAMILY',
+    name: 'Family Pack Consultation',
+    tagline: 'Four people, one in-depth live session.',
+    features: ['Up to 4 family members', 'Main cusp analysis for each member', '1 hour 30 min in-depth live session'],
+  },
+  {
+    code: 'CORPORATE',
+    name: 'Corporate Cosmic Analysis',
+    tagline: 'For a founder or a team.',
+    features: ['Timing windows for launch/hire', 'Live session on Google Meet', 'Remedies and practical guidance'],
+  },
+]
+
+const STATIC_TOPICS = [
+  {
+    title: 'Grahas (9 Planetary Influences)',
+    path: '/#stat-grahas',
+    desc: 'Surya, Chandra, Mangala, Budha, Guru, Shukra, Shani, Rahu, Ketu in Vedic astrology',
+    category: 'Vedic Knowledge',
+    badge: 'Grahas',
+    keywords: ['grahas', 'graha', 'navagraha', 'planets', 'surya', 'chandra', 'mangala', 'budha', 'guru', 'shukra', 'shani', 'rahu', 'ketu', '9 grahas']
+  },
+  {
+    title: 'Nakshatras (27 Lunar Mansions)',
+    path: '/#stat-nakshatras',
+    desc: 'Explore 27 Nakshatras from Ashwini to Revati and stellar alignments',
+    category: 'Vedic Knowledge',
+    badge: 'Nakshatra',
+    keywords: ['nakshatra', 'nakshatras', 'ashwini', 'bharani', 'krittika', 'rohini', '27 nakshatras']
+  },
+  {
+    title: 'Rashis (12 Zodiac Signs)',
+    path: '/#stat-rashis',
+    desc: 'The 12 Vedic Rashis from Mesha to Meena and sidereal house calculations',
+    category: 'Vedic Knowledge',
+    badge: 'Rashi',
+    keywords: ['rashi', 'rashis', 'zodiac', 'mesha', 'vrishabha', 'mithuna', '12 rashis']
+  },
+  {
+    title: 'Plans & Pricing',
+    path: '/pricing',
+    desc: 'Explore all Vedic astrology consultation packages, pricing and recommended plans',
+    category: 'Pages',
+    badge: 'Pricing',
+    keywords: ['pricing', 'price', 'rates', 'plans', 'cost', 'fee', 'rupees', 'usd', 'package', 'packages']
+  },
+  {
+    title: 'Vedic Chart Reading',
+    path: '/#start',
+    desc: 'Sidereal positions, nakshatras, cusps, Dasha analysis & your birth chart',
+    category: 'Services',
+    badge: 'Chart',
+    keywords: ['vedic chart', 'chart', 'reading', 'horoscope', 'kundali', 'birth chart', 'dasha']
+  },
+  {
+    title: 'Daily Wishes & Questions',
+    path: '/#future',
+    desc: 'Specific query consultation, remedies, and future guidance with astrologer',
+    category: 'Services',
+    badge: 'Guidance',
+    keywords: ['wishes', 'future', 'questions', 'remedies', 'consultation', 'daily wishes']
+  },
+]
+
 export default function Nav({ user }) {
   const nav = useNavigate()
+  const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [plans, setPlans] = useState([])
+  const [plans, setPlans] = useState(FALLBACK_PLANS)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30)
@@ -19,41 +106,93 @@ export default function Nav({ user }) {
   }, [])
 
   useEffect(() => {
-    api('/api/plans').then((d) => setPlans(d.plans || [])).catch(() => {})
+    api('/api/plans')
+      .then((d) => {
+        if (d.plans && d.plans.length > 0) {
+          setPlans(d.plans)
+        }
+      })
+      .catch(() => {})
   }, [])
 
-  const staticServices = [
-    { title: 'Vedic Chart Reading', path: '/#start', desc: 'Sidereal positions, nakshatras, cusps & Dasha' },
-    { title: 'Daily Wishes & Questions', path: '/#future', desc: 'Specific query consultation & astrological remedies' },
-    { title: 'Family Pack Consultation', path: '/pricing', desc: 'Complete chart reading for up to 4 family members' },
-    { title: 'Nakshatras & Rashis', path: '/#start', desc: 'Explore 27 Nakshatras and planetary influences' },
-  ]
+  const query = searchQuery.trim().toLowerCase()
 
-  const filteredPlans = searchQuery.trim()
-    ? plans.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.tagline && p.tagline.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+  const filteredPlans = query
+    ? plans.filter((p) => {
+        const nameMatch = (p.name || '').toLowerCase().includes(query)
+        const taglineMatch = (p.tagline || '').toLowerCase().includes(query)
+        const codeMatch = (p.code || '').toLowerCase().includes(query)
+        const featureMatch = (p.features || []).some((f) => f.toLowerCase().includes(query))
+        return nameMatch || taglineMatch || codeMatch || featureMatch
+      })
     : []
 
-  const filteredServices = searchQuery.trim()
-    ? staticServices.filter((s) =>
-        s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.desc.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const filteredTopics = query
+    ? STATIC_TOPICS.filter((t) => {
+        const titleMatch = t.title.toLowerCase().includes(query)
+        const descMatch = t.desc.toLowerCase().includes(query)
+        const kwMatch = (t.keywords || []).some((k) => k.includes(query) || query.includes(k))
+        return titleMatch || descMatch || kwMatch
+      })
     : []
+
+  function highlightAndScroll(targetId) {
+    setTimeout(() => {
+      const el = document.getElementById(targetId)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.remove('search-highlight-target')
+        // Force reflow
+        void el.offsetWidth
+        el.classList.add('search-highlight-target')
+        setTimeout(() => {
+          el.classList.remove('search-highlight-target')
+        }, 3000)
+      }
+    }, 120)
+  }
 
   function handleSelect(path) {
     setSearchOpen(false)
     setSearchQuery('')
     setOpen(false)
+
     if (path.startsWith('/#')) {
-      const hash = path.substring(1)
-      window.location.hash = hash
-      const el = document.getElementById(hash.replace('#', ''))
-      if (el) el.scrollIntoView({ behavior: 'smooth' })
+      const hashId = path.substring(2)
+      if (location.pathname !== '/') {
+        nav('/')
+        setTimeout(() => {
+          highlightAndScroll(hashId)
+        }, 200)
+      } else {
+        window.location.hash = hashId
+        highlightAndScroll(hashId)
+      }
     } else {
       nav(path)
+      if (path === '/pricing') {
+        highlightAndScroll('pricing-section')
+      }
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Escape') {
+      setSearchOpen(false)
+      return
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      // Auto-navigate to first match if available
+      if (filteredTopics.length > 0) {
+        handleSelect(filteredTopics[0].path)
+      } else if (filteredPlans.length > 0) {
+        handleSelect('/pricing')
+      } else if (query.includes('price') || query.includes('pricing') || query.includes('plan')) {
+        handleSelect('/pricing')
+      } else if (query.includes('graha') || query.includes('grahas')) {
+        handleSelect('/#stat-grahas')
+      }
     }
   }
 
@@ -117,12 +256,10 @@ export default function Nav({ user }) {
               <input
                 type="search"
                 autoFocus
-                placeholder="Search plans, services, Vedic charts, guidance..."
+                placeholder="Search plans, services, Grahas, pricing..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') setSearchOpen(false)
-                }}
+                onKeyDown={handleKeyDown}
               />
               <button type="button" className="search-close-btn" onClick={() => setSearchOpen(false)}>Esc</button>
             </div>
@@ -132,16 +269,45 @@ export default function Nav({ user }) {
                 <div className="search-suggestions">
                   <p className="search-cat-title">Suggested Searches</p>
                   <div className="search-chips">
-                    <button type="button" onClick={() => setSearchQuery('Guru')}>Guru Darshina</button>
+                    <button type="button" onClick={() => setSearchQuery('Grahas')}>🪐 9 Grahas</button>
+                    <button type="button" onClick={() => setSearchQuery('Pricing')}>💎 Pricing & Plans</button>
+                    <button type="button" onClick={() => setSearchQuery('Guru')}>Guru Dakshina</button>
+                    <button type="button" onClick={() => setSearchQuery('Nakshatras')}>27 Nakshatras</button>
                     <button type="button" onClick={() => setSearchQuery('Chart')}>Vedic Chart</button>
-                    <button type="button" onClick={() => setSearchQuery('Family')}>Family Pack</button>
-                    <button type="button" onClick={() => setSearchQuery('Wishes')}>Daily Wishes</button>
                   </div>
                 </div>
               ) : (
                 <>
-                  {filteredPlans.length === 0 && filteredServices.length === 0 && (
-                    <p className="search-empty">No results matching "{searchQuery}"</p>
+                  {filteredPlans.length === 0 && filteredTopics.length === 0 && (
+                    <div className="search-empty-box">
+                      <p className="search-empty">No results matching "{searchQuery}"</p>
+                      <button
+                        type="button"
+                        className="btn ghost search-quick-btn"
+                        onClick={() => handleSelect(query.includes('price') || query.includes('plan') ? '/pricing' : '/#start')}
+                      >
+                        Explore {query.includes('price') || query.includes('plan') ? 'Pricing Plans' : 'Vedic Guidance'}
+                      </button>
+                    </div>
+                  )}
+
+                  {filteredTopics.length > 0 && (
+                    <div className="search-group">
+                      <p className="search-cat-title">Vedic Knowledge & Pages</p>
+                      {filteredTopics.map((t) => (
+                        <div
+                          key={t.title}
+                          className="search-item"
+                          onClick={() => handleSelect(t.path)}
+                        >
+                          <div className="search-item-info">
+                            <strong>{t.title}</strong>
+                            <span>{t.desc}</span>
+                          </div>
+                          <span className="search-badge">{t.badge || 'Topic'}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
 
                   {filteredPlans.length > 0 && (
@@ -158,25 +324,6 @@ export default function Nav({ user }) {
                             <span>{p.tagline || (p.features && p.features.join(', '))}</span>
                           </div>
                           <span className="search-badge">Plan</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {filteredServices.length > 0 && (
-                    <div className="search-group">
-                      <p className="search-cat-title">Services & Guidance</p>
-                      {filteredServices.map((s) => (
-                        <div
-                          key={s.title}
-                          className="search-item"
-                          onClick={() => handleSelect(s.path)}
-                        >
-                          <div className="search-item-info">
-                            <strong>{s.title}</strong>
-                            <span>{s.desc}</span>
-                          </div>
-                          <span className="search-badge">Service</span>
                         </div>
                       ))}
                     </div>

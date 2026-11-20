@@ -32,10 +32,10 @@ export default function Home() {
               </div>
             </Reveal>
             <Reveal delay={480}>
-              <div className="hero-stats">
-                <div><Count to={27} /><span>Nakshatras</span></div>
-                <div><Count to={12} /><span>Rashis</span></div>
-                <div><Count to={9} /><span>Grahas</span></div>
+              <div className="hero-stats" id="stats">
+                <div id="stat-nakshatras"><Count to={27} /><span>Nakshatras</span></div>
+                <div id="stat-rashis"><Count to={12} /><span>Rashis</span></div>
+                <div id="stat-grahas"><Count to={9} /><span>Grahas</span></div>
               </div>
             </Reveal>
           </div>
