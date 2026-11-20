@@ -5,12 +5,19 @@ import { Reveal, tilt, untilt } from './Motion'
 
 export default function PlanGrid({ plans, onPick, region, onRegion }) {
   const [local, setLocal] = useState('IN')
+  const [dismissedPlans, setDismissedPlans] = useState({})
   const current = region || local
   function choose(next) {
     setLocal(next)
     if (onRegion) onRegion(next)
   }
+  function dismissPlan(e, code) {
+    e.preventDefault()
+    e.stopPropagation()
+    setDismissedPlans((prev) => ({ ...prev, [code]: true }))
+  }
   if (!plans.length) return <p className="muted">Loading plans…</p>
+  const visiblePlans = plans.filter((p) => !dismissedPlans[p.code])
   return (
     <>
       <div className="region-switch" role="group" aria-label="Country">
@@ -23,9 +30,20 @@ export default function PlanGrid({ plans, onPick, region, onRegion }) {
           : 'Prices in US dollars. Indian GST is not added.'}
       </p>
       <div className="plan-grid">
-        {plans.map((p, i) => (
+        {visiblePlans.map((p, i) => (
           <Reveal key={p.code} delay={i * 80} as="article" className={p.recommended ? 'plan-card featured hoverable zoom' : 'plan-card hoverable'}>
-            <div onPointerMove={tilt} onPointerLeave={untilt}>
+            <div onPointerMove={tilt} onPointerLeave={untilt} style={{ position: 'relative' }}>
+              {p.recommended && (
+                <button
+                  type="button"
+                  className="plan-dismiss-btn"
+                  title="Dismiss recommended card"
+                  aria-label="Dismiss recommended card"
+                  onClick={(e) => dismissPlan(e, p.code)}
+                >
+                  ✕
+                </button>
+              )}
               {p.recommended && <span className="ribbon">Recommended</span>}
               <h3>{p.name}</h3>
               <p className="tagline">{p.tagline}</p>

@@ -15,7 +15,7 @@ export default function Start() {
   const nav = useNavigate()
   const [intent, setIntent] = useState(intentFromHash() || 'chart')
   const [step, setStep] = useState('form')
-  const [form, setForm] = useState({ fullName: '', phone: '', email: '' })
+  const [form, setForm] = useState({ fullName: '', phone: '', email: '', source: '', referralDetails: '' })
   const [birth, setBirth] = useState(emptyBirth)
   const [questions, setQuestions] = useState([])
   const [answers, setAnswers] = useState({})
@@ -62,6 +62,14 @@ export default function Start() {
   async function createAccount(e) {
     e.preventDefault()
     setErr('')
+    if (!form.source) {
+      setErr('Please select how you heard about us (Lead source is required).')
+      return
+    }
+    if (form.source === 'Referral' && !form.referralDetails.trim()) {
+      setErr('Please provide referral details (who referred you or referral code).')
+      return
+    }
     if (!birth.lat || birth.tz === '') { setErr('Pick the birth place from the suggestions so the time zone is set.'); return }
     setBusy(true)
     try {
@@ -104,7 +112,7 @@ export default function Start() {
           <span className="tag">Begin</span>
           <h2>Begin with Vedic guidance</h2>
           <div className="divider" />
-          <p>Share your name, phone, email and birth details. Your account is created and you go straight into your portal. Your password is your mobile number.</p>
+          <p>Share your name, phone, email and birth details. Your account is created and you go straight into your portal. Please check your email inbox or WhatsApp for your sign-in details.</p>
         </div>
         {step === 'form' && (
           <form className="form-card" onSubmit={createAccount}>
@@ -116,6 +124,33 @@ export default function Start() {
               <label>Full name<input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required /></label>
               <label>Phone number<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" required /></label>
               <label className="span-2">Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></label>
+              
+              <label className={form.source === 'Referral' ? '' : 'span-2'}>
+                How did you find us? <span style={{ color: 'var(--orange)' }}>*</span>
+                <select
+                  value={form.source}
+                  onChange={(e) => setForm({ ...form, source: e.target.value })}
+                  required
+                >
+                  <option value="" disabled>Select Source</option>
+                  <option value="YouTube">YouTube</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="Referral">Referral</option>
+                </select>
+              </label>
+
+              {form.source === 'Referral' && (
+                <label>
+                  Referral code or details <span style={{ color: 'var(--orange)' }}>*</span>
+                  <input
+                    type="text"
+                    value={form.referralDetails}
+                    onChange={(e) => setForm({ ...form, referralDetails: e.target.value })}
+                    placeholder="Referral name or code"
+                    required
+                  />
+                </label>
+              )}
             </div>
             <BirthFields value={birth} onChange={setBirth} />
             {err && <p className="err">{err}</p>}

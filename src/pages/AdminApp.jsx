@@ -125,7 +125,7 @@ export default function AdminApp() {
     ['consults', 'Consultations'],
     ['questions', 'Questions'],
     ['plans', 'Plans'],
-    ['reports', 'Reports'],
+    ['reports', 'Reports & Commission'],
     ['notes', 'Notifications'],
     ['settings', 'Settings']
   ]
@@ -234,7 +234,7 @@ export default function AdminApp() {
       <main className="admin-main">
         <div className="admin-main-container">
           {tab === 'overview' && <Overview />}
-          {tab === 'customers' && <Customers />}
+          {tab === 'customers' && <Customers me={me} />}
           {tab === 'employees' && me.role === 'ADMIN' && <Employees />}
           {tab === 'employees' && me.role !== 'ADMIN' && <p>Only the administrator can add employees.</p>}
           {tab === 'consults' && <Consults />}
@@ -277,45 +277,245 @@ function Overview() {
   )
 }
 
-function Customers() {
+function Customers({ me }) {
   const [rows, setRows] = useState([])
+  const [employees, setEmployees] = useState([])
+  const [plans, setPlans] = useState([])
   const [open, setOpen] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [filterSource, setFilterSource] = useState('ALL')
+  const [filterStatus, setFilterStatus] = useState('ALL')
 
-  useEffect(() => {
+  function load() {
     setLoading(true)
-    api('/api/admin/customers')
-      .then((res) => { setRows(res); setLoading(false) })
+    Promise.all([
+      api('/api/admin/customers'),
+      api('/api/admin/employees').catch(() => []),
+      api('/api/plans').then(d => d.plans || []).catch(() => [])
+    ])
+      .then(([custs, emps, plns]) => {
+        setRows(custs || [])
+        setEmployees(emps || [])
+        setPlans(plns || [])
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
-  }, [])
+  }
 
-  if (loading) return <SkeletonTable cols={5} rows={6} />
+  useEffect(load, [])
+
+  async function handleAssign(customerId, employeeId) {
+    try {
+      await api(`/api/admin/customers/${customerId}/assign`, {
+        method: 'PATCH',
+        body: { employeeId: employeeId || null }
+      })
+      load()
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
+  async function handleLeadUpdate(customerId, leadStatus, selectedPlan) {
+    try {
+      const planObj = plans.find(p => p.code === selectedPlan)
+      await api(`/api/admin/customers/${customerId}/lead`, {
+        method: 'PATCH',
+        body: {
+          leadStatus,
+          selectedPlan: selectedPlan || null,
+          selectedPlanName: planObj ? planObj.name : null
+        }
+      })
+      load()
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
+  const filteredRows = rows.filter(u => {
+    if (filterSource !== 'ALL' && (u.source || 'Direct') !== filterSource) return false
+    if (filterStatus !== 'ALL' && (u.leadStatus || 'NEW') !== filterStatus) return false
+    return true
+  })
+
+  if (loading) return <SkeletonTable cols={7} rows={6} />
 
   return (
     <section>
+      {/* Customer Overview Bar */}
+      <div className="card" style={{ marginBottom: 12, padding: '10px 14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ink)' }}>
+              👥 {me.role === 'ADMIN' ? 'All Customers & Leads' : 'My Assigned Leads'} ({filteredRows.length})
+            </span>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--ink-soft)' }}>Source:</span>
+              <select
+                style={{ fontSize: '0.76rem', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--o-200)' }}
+                value={filterSource}
+                onChange={e => setFilterSource(e.target.value)}
+              >
+                <option value="ALL">All Sources</option>
+                <option value="YouTube">YouTube</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Referral">Referral</option>
+                <option value="Direct">Direct</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--ink-soft)' }}>Status:</span>
+              <select
+                style={{ fontSize: '0.76rem', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--o-200)' }}
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="NEW">New Lead</option>
+                <option value="CONTACTED">Contacted</option>
+                <option value="CONVERTED">Converted</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+            </div>
+          </div>
+          {me.role === 'ADMIN' && (
+            <span className="tag" style={{ fontSize: '0.72rem' }}>Admin Full Access</span>
+          )}
+        </div>
+      </div>
+
       <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Account</th><th>State</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Source</th>
+            <th>Lead Status</th>
+            <th>Selected Plan</th>
+            <th>Assigned To</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody>
-          {rows.length === 0 ? (
-            <tr><td colSpan={5} style={{ textAlign: 'center', padding: '24px' }}>No customers found.</td></tr>
+          {filteredRows.length === 0 ? (
+            <tr><td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>No customers match the current filter.</td></tr>
           ) : (
-            rows.map((u) => (
-              <tr key={u.id}>
-                <td>{u.fullName}</td>
-                <td>{u.email}</td>
-                <td>{u.accountType}</td>
-                <td>{u.billingState}</td>
-                <td><button className="btn sm" onClick={() => api('/api/admin/customers/' + u.id).then(setOpen)}>Open</button></td>
-              </tr>
-            ))
+            filteredRows.map((u) => {
+              const isAssignedToMe = me.id === u.assignedTo
+              const canAssign = me.role === 'ADMIN' || !u.assignedTo || isAssignedToMe
+              return (
+                <tr key={u.id}>
+                  <td>
+                    <strong>{u.fullName}</strong>
+                    <br />
+                    <small style={{ color: 'var(--ink-soft)' }}>{u.email}</small>
+                    {u.phone && <><br /><small style={{ color: 'var(--o-700)' }}>{u.phone}</small></>}
+                  </td>
+                  <td>
+                    <span className="search-badge" style={{ fontSize: '0.72rem' }}>
+                      {u.source || 'Direct'}
+                    </span>
+                    {u.referralDetails && (
+                      <div style={{ fontSize: '0.7rem', color: 'var(--ink-soft)', marginTop: 2 }}>
+                        Ref: {u.referralDetails}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <select
+                      value={u.leadStatus || 'NEW'}
+                      onChange={(e) => handleLeadUpdate(u.id, e.target.value, u.selectedPlan)}
+                      style={{
+                        fontSize: '0.75rem',
+                        padding: '3px 6px',
+                        borderRadius: 6,
+                        border: '1px solid var(--o-200)',
+                        background: u.leadStatus === 'CONVERTED' ? '#dcfce7' : '#fff'
+                      }}
+                    >
+                      <option value="NEW">New Lead</option>
+                      <option value="CONTACTED">Contacted</option>
+                      <option value="CONVERTED">Converted</option>
+                      <option value="CLOSED">Closed</option>
+                    </select>
+                    {u.convertedAt && (
+                      <div style={{ fontSize: '0.68rem', color: '#166534', marginTop: 2 }}>
+                        ✓ {spokenDate(u.convertedAt)}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <select
+                      value={u.selectedPlan || ''}
+                      onChange={(e) => handleLeadUpdate(u.id, u.leadStatus || 'NEW', e.target.value)}
+                      style={{ fontSize: '0.75rem', padding: '3px 6px', borderRadius: 6, border: '1px solid var(--o-200)', maxWidth: 140 }}
+                    >
+                      <option value="">No Plan</option>
+                      {plans.map(p => (
+                        <option key={p.code} value={p.code}>{p.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    {canAssign ? (
+                      <select
+                        value={u.assignedTo || ''}
+                        onChange={(e) => handleAssign(u.id, e.target.value)}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '3px 6px',
+                          borderRadius: 6,
+                          border: '1px solid var(--o-200)',
+                          background: u.assignedTo ? 'var(--o-50)' : '#fff'
+                        }}
+                      >
+                        <option value="">Unassigned</option>
+                        <option value={me.id}>Self ({me.fullName})</option>
+                        {me.role === 'ADMIN' && employees.filter(e => e.id !== me.id).map(e => (
+                          <option key={e.id} value={e.id}>{e.fullName}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span style={{ fontSize: '0.78rem', color: 'var(--ink)' }}>
+                        {u.assignedToName || 'Unassigned'}
+                      </span>
+                    )}
+                  </td>
+                  <td><small>{spokenDate(u.createdAt)}</small></td>
+                  <td>
+                    <button
+                      className="btn sm"
+                      style={{ padding: '3px 9px', fontSize: '0.75rem' }}
+                      onClick={() => api('/api/admin/customers/' + u.id).then(setOpen)}
+                    >
+                      Chart
+                    </button>
+                  </td>
+                </tr>
+              )
+            })
           )}
         </tbody>
       </table>
+
       {open && (
         <div className="card" style={{ marginTop: 12 }}>
-          <h3>{open.user.fullName}</h3>
-          <ul>{open.profiles.map((p) => <li key={p.id}>{p.relation}: {p.fullName} · {spokenDate(p.dob)} · {p.city}</li>)}</ul>
-          <p>{open.reports.length} report(s)</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <h3 style={{ margin: 0 }}>Full Chart & Record: {open.user.fullName}</h3>
+            <button className="btn sm ghost" onClick={() => setOpen(null)} style={{ padding: '2px 8px' }}>Close</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 12, fontSize: '0.82rem' }}>
+            <div><strong>Email:</strong> {open.user.email}</div>
+            <div><strong>Phone:</strong> {open.user.phone || '—'}</div>
+            <div><strong>Lead Source:</strong> {open.user.source || 'Direct'}</div>
+            <div><strong>Lead Status:</strong> {open.user.leadStatus || 'NEW'}</div>
+            <div><strong>Selected Plan:</strong> {open.user.selectedPlanName || open.user.selectedPlan || 'None'}</div>
+            <div><strong>Assigned To:</strong> {open.user.assignedToName || 'Unassigned'}</div>
+          </div>
+          <h4>Birth Profiles & Cusps</h4>
+          <ul>{open.profiles.map((p) => <li key={p.id}><strong>{p.relation}:</strong> {p.fullName} · {spokenDate(p.dob)} {p.tob} · {p.city} (Lat: {p.lat}, Lon: {p.lon})</li>)}</ul>
+          <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{open.reports.length} report(s) on file.</p>
         </div>
       )}
     </section>
@@ -697,23 +897,64 @@ function Questions() {
   )
 }
 
-function Reports() {
+function Reports({ me }) {
+  const [activeTab, setActiveTab] = useState('leads') // 'leads' | 'commission' | 'files'
   const [customers, setCustomers] = useState([])
   const [reports, setReports] = useState([])
-  const [msg, setMsg] = useState('')
+  const [commRates, setCommRates] = useState([])
+  const [commRecords, setCommRecords] = useState([])
   const [loading, setLoading] = useState(true)
+  const [msg, setMsg] = useState('')
+  const [savingRate, setSavingRate] = useState(false)
+
+  // Rate edit states
+  const [rateEdits, setRateEdits] = useState({ YouTube: 10, Instagram: 20, Referral: 15 })
+
+  // Filters for Converted Leads
+  const [filterSource, setFilterSource] = useState('ALL')
+  const [filterPlan, setFilterPlan] = useState('ALL')
 
   function load() {
     setLoading(true)
-    Promise.all([api('/api/admin/reports'), api('/api/admin/customers')])
-      .then(([reps, custs]) => {
-        setReports(reps)
-        setCustomers(custs)
+    Promise.all([
+      api('/api/admin/reports'),
+      api('/api/admin/customers'),
+      api('/api/admin/commissions/rates').catch(() => []),
+      api('/api/admin/commissions/records').catch(() => [])
+    ])
+      .then(([reps, custs, rates, records]) => {
+        setReports(reps || [])
+        setCustomers(custs || [])
+        setCommRates(rates || [])
+        setCommRecords(records || [])
+
+        if (rates && rates.length > 0) {
+          const map = { ...rateEdits }
+          rates.forEach(r => { map[r.source] = r.ratePercent })
+          setRateEdits(map)
+        }
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }
+
   useEffect(load, [])
+
+  async function handleSaveRate(source) {
+    setSavingRate(true)
+    try {
+      await api(`/api/admin/commissions/rates/${source}`, {
+        method: 'PUT',
+        body: { ratePercent: parseFloat(rateEdits[source]) }
+      })
+      setMsg(`Updated ${source} commission rate to ${rateEdits[source]}%. Applied to future calculations.`)
+      load()
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setSavingRate(false)
+    }
+  }
 
   async function upload(e) {
     e.preventDefault()
@@ -724,33 +965,252 @@ function Reports() {
     load()
   }
 
+  // Calculate Lead Stats
+  const convertedLeads = customers.filter(c => c.leadStatus === 'CONVERTED')
+  const filteredConvertedLeads = convertedLeads.filter(c => {
+    if (filterSource !== 'ALL' && (c.source || 'Direct') !== filterSource) return false
+    if (filterPlan !== 'ALL' && (c.selectedPlan || 'None') !== filterPlan) return false
+    return true
+  })
+
+  // Group commission by Source & Month
+  const totalCommBySource = {
+    YouTube: commRecords.filter(r => r.source === 'YouTube').reduce((acc, r) => acc + (r.commissionAmountMinor || 0), 0),
+    Instagram: commRecords.filter(r => r.source === 'Instagram').reduce((acc, r) => acc + (r.commissionAmountMinor || 0), 0),
+    Referral: commRecords.filter(r => r.source === 'Referral').reduce((acc, r) => acc + (r.commissionAmountMinor || 0), 0),
+  }
+
+  if (loading) return <SkeletonTable cols={6} rows={6} />
+
   return (
     <section>
-      <form onSubmit={upload} className="card" style={{ marginBottom: 20 }}>
-        {msg && <p className="ok">{msg}</p>}
-        <label>Customer
-          <select name="userId" required>
-            {customers.map((c) => <option key={c.id} value={c.id}>{c.fullName} · {c.email}</option>)}
-          </select>
-        </label>
-        <label>Title<input name="title" required /></label>
-        <label>Fulfill an existing request (optional)<input name="reportId" placeholder="rep_…" /></label>
-        <label>File<input name="file" type="file" required /></label>
-        <button className="btn" type="submit" style={{ marginTop: 8 }}>Upload to their account</button>
-      </form>
-      {loading ? (
-        <SkeletonTable cols={3} rows={5} />
-      ) : (
-        <table>
-          <thead><tr><th>Title</th><th>Customer</th><th>Status</th></tr></thead>
-          <tbody>
-            {reports.length === 0 ? (
-              <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px' }}>No reports uploaded yet.</td></tr>
-            ) : (
-              reports.map((r) => <tr key={r.id}><td>{r.title}<br /><small>{r.id}</small></td><td>{r.userId}</td><td>{r.status}</td></tr>)
-            )}
-          </tbody>
-        </table>
+      {/* Tab Switcher */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button
+          type="button"
+          className={`btn sm ${activeTab === 'leads' ? '' : 'ghost'}`}
+          onClick={() => setActiveTab('leads')}
+        >
+          📊 Converted Leads Report
+        </button>
+        <button
+          type="button"
+          className={`btn sm ${activeTab === 'commission' ? '' : 'ghost'}`}
+          onClick={() => setActiveTab('commission')}
+        >
+          💰 Source Commission & Rates
+        </button>
+        <button
+          type="button"
+          className={`btn sm ${activeTab === 'files' ? '' : 'ghost'}`}
+          onClick={() => setActiveTab('files')}
+        >
+          📁 Customer Report Uploads
+        </button>
+      </div>
+
+      {msg && <p className="ok" style={{ marginBottom: 14 }}>{msg}</p>}
+
+      {/* 1. Converted Leads Report */}
+      {activeTab === 'leads' && (
+        <div>
+          {/* Summary KPI Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
+            <div className="card" style={{ padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', textTransform: 'uppercase', fontWeight: 700 }}>Total Leads</span>
+              <h3 style={{ margin: '4px 0 0', fontSize: '1.4rem' }}>{customers.length}</h3>
+            </div>
+            <div className="card" style={{ padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', textTransform: 'uppercase', fontWeight: 700 }}>Converted Leads</span>
+              <h3 style={{ margin: '4px 0 0', fontSize: '1.4rem', color: 'var(--orange)' }}>{convertedLeads.length}</h3>
+            </div>
+            <div className="card" style={{ padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', textTransform: 'uppercase', fontWeight: 700 }}>Conversion Rate</span>
+              <h3 style={{ margin: '4px 0 0', fontSize: '1.4rem', color: '#166534' }}>
+                {customers.length > 0 ? ((convertedLeads.length / customers.length) * 100).toFixed(1) : 0}%
+              </h3>
+            </div>
+          </div>
+
+          {/* Filter Bar */}
+          <div className="card" style={{ marginBottom: 12, padding: '8px 12px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>Filter Leads:</span>
+            <select
+              style={{ fontSize: '0.76rem', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--o-200)' }}
+              value={filterSource}
+              onChange={e => setFilterSource(e.target.value)}
+            >
+              <option value="ALL">All Sources</option>
+              <option value="YouTube">YouTube</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Referral">Referral</option>
+              <option value="Direct">Direct</option>
+            </select>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Source</th>
+                <th>Selected Plan</th>
+                <th>Assigned Owner</th>
+                <th>Registered</th>
+                <th>Converted On</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredConvertedLeads.length === 0 ? (
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '24px' }}>No converted leads match this filter.</td></tr>
+              ) : (
+                filteredConvertedLeads.map(c => (
+                  <tr key={c.id}>
+                    <td>
+                      <strong>{c.fullName}</strong>
+                      <br /><small>{c.email}</small>
+                    </td>
+                    <td>
+                      <span className="search-badge" style={{ fontSize: '0.72rem' }}>
+                        {c.source || 'Direct'}
+                      </span>
+                      {c.referralDetails && <div style={{ fontSize: '0.68rem', color: 'var(--ink-soft)' }}>Ref: {c.referralDetails}</div>}
+                    </td>
+                    <td><strong>{c.selectedPlanName || c.selectedPlan || 'General Consultation'}</strong></td>
+                    <td>{c.assignedToName || 'Unassigned'}</td>
+                    <td><small>{spokenDate(c.createdAt)}</small></td>
+                    <td><small style={{ color: '#166534', fontWeight: 600 }}>{spokenDate(c.convertedAt || c.createdAt)}</small></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* 2. Source-wise Commission & Editable Rates */}
+      {activeTab === 'commission' && (
+        <div>
+          {/* Rate Editor (Admin) */}
+          {me.role === 'ADMIN' && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <h3 style={{ margin: '0 0 6px', fontSize: '1rem' }}>⚙️ Configure Source Commission Rates</h3>
+              <p style={{ margin: '0 0 12px', fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
+                Rates apply to future conversions. Historical commissions retain the exact percentage applied at calculation time.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                {['YouTube', 'Instagram', 'Referral'].map(src => (
+                  <div key={src} style={{ background: 'var(--o-50)', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--o-200)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 6 }}>{src}</div>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={rateEdits[src] || ''}
+                        onChange={e => setRateEdits({ ...rateEdits, [src]: e.target.value })}
+                        style={{ width: '80px', padding: '4px 6px', fontSize: '0.82rem', borderRadius: 6, border: '1px solid var(--o-200)' }}
+                      />
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>%</span>
+                      <button
+                        type="button"
+                        className="btn sm"
+                        style={{ padding: '4px 8px', fontSize: '0.74rem' }}
+                        onClick={() => handleSaveRate(src)}
+                        disabled={savingRate}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Monthly Commission Breakdown */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
+            <div className="card" style={{ padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', textTransform: 'uppercase', fontWeight: 700 }}>YouTube Commission</span>
+              <h3 style={{ margin: '4px 0 0', fontSize: '1.2rem', color: 'var(--orange)' }}>
+                ₹{(totalCommBySource.YouTube / 100).toFixed(2)}
+              </h3>
+            </div>
+            <div className="card" style={{ padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', textTransform: 'uppercase', fontWeight: 700 }}>Instagram Commission</span>
+              <h3 style={{ margin: '4px 0 0', fontSize: '1.2rem', color: 'var(--orange)' }}>
+                ₹{(totalCommBySource.Instagram / 100).toFixed(2)}
+              </h3>
+            </div>
+            <div className="card" style={{ padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', textTransform: 'uppercase', fontWeight: 700 }}>Referral Commission</span>
+              <h3 style={{ margin: '4px 0 0', fontSize: '1.2rem', color: 'var(--orange)' }}>
+                ₹{(totalCommBySource.Referral / 100).toFixed(2)}
+              </h3>
+            </div>
+          </div>
+
+          {/* Locked Historical Records */}
+          <h4>Locked Commission Calculations</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Source</th>
+                <th>Plan</th>
+                <th>Locked Rate</th>
+                <th>Commission Amount</th>
+                <th>Month</th>
+                <th>Calculated Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {commRecords.length === 0 ? (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>No commission records calculated yet.</td></tr>
+              ) : (
+                commRecords.map(r => (
+                  <tr key={r.id}>
+                    <td><strong>{r.customerName}</strong></td>
+                    <td><span className="search-badge" style={{ fontSize: '0.72rem' }}>{r.source}</span></td>
+                    <td>{r.planName || r.planCode || '—'}</td>
+                    <td><strong>{r.appliedRatePercent}%</strong></td>
+                    <td style={{ color: 'var(--o-700)', fontWeight: 700 }}>₹{(r.commissionAmountMinor / 100).toFixed(2)}</td>
+                    <td>{r.monthKey}</td>
+                    <td><small>{spokenDate(r.createdAt)}</small></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* 3. Customer Report Files */}
+      {activeTab === 'files' && (
+        <div>
+          <form onSubmit={upload} className="card" style={{ marginBottom: 20 }}>
+            <label>Customer
+              <select name="userId" required>
+                {customers.map((c) => <option key={c.id} value={c.id}>{c.fullName} · {c.email}</option>)}
+              </select>
+            </label>
+            <label>Title<input name="title" required /></label>
+            <label>Fulfill an existing request (optional)<input name="reportId" placeholder="rep_…" /></label>
+            <label>File<input name="file" type="file" required /></label>
+            <button className="btn" type="submit" style={{ marginTop: 8 }}>Upload to their account</button>
+          </form>
+
+          <table>
+            <thead><tr><th>Title</th><th>Customer</th><th>Status</th></tr></thead>
+            <tbody>
+              {reports.length === 0 ? (
+                <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px' }}>No reports uploaded yet.</td></tr>
+              ) : (
+                reports.map((r) => <tr key={r.id}><td>{r.title}<br /><small>{r.id}</small></td><td>{r.userId}</td><td>{r.status}</td></tr>)
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   )

@@ -103,7 +103,12 @@ export default function Home() {
           <PlanGrid plans={plans} />
         </div>
       </section>
-      <footer><div className="wrap">© {new Date().getFullYear()} <Wordmark /> · Vedic astrology, daily wishes & expert guidance.</div></footer>
+      <footer>
+        <div className="wrap footer-content">
+          <p>© {new Date().getFullYear()} <Wordmark /> · Vedic astrology, daily wishes & expert guidance.</p>
+          <p className="footer-credit">Powered by Amrutha Varahi Universal Solutions Pvt. Ltd.</p>
+        </div>
+      </footer>
     </>
   )
 }

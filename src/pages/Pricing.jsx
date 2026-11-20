@@ -23,6 +23,12 @@ export default function Pricing() {
           <PlanGrid plans={data.plans || []} />
         </div>
       </section>
+      <footer>
+        <div className="wrap footer-content">
+          <p>© {new Date().getFullYear()} AstroGreet · Vedic astrology, daily wishes & expert guidance.</p>
+          <p className="footer-credit">Powered by Amrutha Varahi Universal Solutions Pvt. Ltd.</p>
+        </div>
+      </footer>
     </>
   )
 }
