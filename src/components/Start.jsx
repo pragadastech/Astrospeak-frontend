@@ -73,8 +73,9 @@ export default function Start() {
     if (!birth.lat || birth.tz === '') { setErr('Pick the birth place from the suggestions so the time zone is set.'); return }
     setBusy(true)
     try {
-      await api('/api/auth/start', { method: 'POST', body: { ...form, birth: birthPayload(birth) } })
-      nav('/app')
+      const res = await api('/api/auth/start', { method: 'POST', body: { ...form, birth: birthPayload(birth) } })
+      setDone(res)
+      setStep('done')
     } catch (ex) { setErr(ex.message) }
     finally { setBusy(false) }
   }
@@ -200,7 +201,22 @@ export default function Start() {
         {step === 'done' && intent === 'chart' && done && (
           <div className="card">
             <h3>Your account is created</h3>
-            <p>We sent an email to <b>{done.email}</b> with your sign-in details. Your password is your mobile number, digits only.</p>
+            <p>Your sign-in details were dispatched:</p>
+            <div style={{ margin: '14px 0', padding: '12px 16px', background: 'var(--o-50)', borderRadius: 10, border: '1px solid var(--o-200)', display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.88rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>✉️ <strong>Email Channel:</strong></span>
+                <span style={{ color: done.notificationStatus?.emailSent ? '#166534' : 'var(--orange)', fontWeight: 600 }}>
+                  {done.notificationStatus?.emailSent ? 'SENT' : 'DISPATCHED'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>💬 <strong>WhatsApp Channel:</strong></span>
+                <span style={{ color: done.notificationStatus?.whatsappStatus === 'SENT' ? '#166534' : 'var(--ink-soft)', fontWeight: 600 }}>
+                  {done.notificationStatus?.whatsappStatus || 'SKIPPED (Wired for live)'}
+                </span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.84rem', color: 'var(--ink-soft)' }}>Your password is your mobile number, digits only.</p>
             {done.password && <p className="info">The mailbox is not connected yet, so keep this password: <strong>{done.password}</strong></p>}
             <button className="btn" type="button" onClick={() => nav('/app?tab=chart')}>Open your Vedic chart</button>
           </div>
@@ -208,7 +224,24 @@ export default function Start() {
         {step === 'done' && intent === 'future' && (
           <div className="card">
             <h3>Your session is requested</h3>
-            <p>Your answers are with the astrologer. The meeting link arrives after the session is confirmed. Your password is your mobile number, digits only.</p>
+            <p>Your answers are with the astrologer. The meeting link arrives after the session is confirmed.</p>
+            {done && (
+              <div style={{ margin: '14px 0', padding: '12px 16px', background: 'var(--o-50)', borderRadius: 10, border: '1px solid var(--o-200)', display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.88rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>✉️ <strong>Email Channel:</strong></span>
+                  <span style={{ color: done.notificationStatus?.emailSent ? '#166534' : 'var(--orange)', fontWeight: 600 }}>
+                    {done.notificationStatus?.emailSent ? 'SENT' : 'DISPATCHED'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>💬 <strong>WhatsApp Channel:</strong></span>
+                  <span style={{ color: done.notificationStatus?.whatsappStatus === 'SENT' ? '#166534' : 'var(--ink-soft)', fontWeight: 600 }}>
+                    {done.notificationStatus?.whatsappStatus || 'SKIPPED (Wired for live)'}
+                  </span>
+                </div>
+              </div>
+            )}
+            <p style={{ fontSize: '0.84rem', color: 'var(--ink-soft)' }}>Your password is your mobile number, digits only.</p>
             {done?.password && <p className="info">The mailbox is not connected yet, so keep this password: <strong>{done.password}</strong></p>}
             <Link className="btn" to="/app">Open your account</Link>
           </div>

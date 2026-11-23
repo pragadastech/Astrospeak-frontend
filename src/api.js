@@ -61,10 +61,19 @@ export function moneyMinor(currency, minor) {
 }
 
 export function spokenDate(iso) {
-  if (!iso) return ''
-  const [y, m, d] = iso.split('-').map(Number)
-  if (!y || !m || !d) return ''
-  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  if (!iso) return '—'
+  // Support both YYYY-MM-DD and full ISO strings like 2026-11-20T16:45:00.000Z
+  try {
+    const d = new Date(iso)
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    }
+  } catch (e) {}
+  const parts = String(iso).split('T')[0].split('-').map(Number)
+  if (parts.length >= 3 && parts[0] && parts[1] && parts[2]) {
+    return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+  return String(iso).substring(0, 10) || '—'
 }
 
 export function to24(hour, minute, ap) {
