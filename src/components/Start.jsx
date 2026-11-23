@@ -15,7 +15,7 @@ export default function Start() {
   const nav = useNavigate()
   const [intent, setIntent] = useState(intentFromHash() || 'chart')
   const [step, setStep] = useState('form')
-  const [form, setForm] = useState({ fullName: '', phone: '', email: '', source: '', referralDetails: '' })
+  const [form, setForm] = useState({ fullName: '', phone: '', email: '', source: '', referralDetails: '', selectedPlan: '' })
   const [birth, setBirth] = useState(emptyBirth)
   const [questions, setQuestions] = useState([])
   const [answers, setAnswers] = useState({})
@@ -27,6 +27,13 @@ export default function Start() {
   const [done, setDone] = useState(null)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    api('/api/plans').then((data) => {
+      const list = Array.isArray(data) ? data : (data?.plans || [])
+      setPlans(list)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const onHash = () => {
@@ -73,7 +80,14 @@ export default function Start() {
     if (!birth.lat || birth.tz === '') { setErr('Pick the birth place from the suggestions so the time zone is set.'); return }
     setBusy(true)
     try {
-      const res = await api('/api/auth/start', { method: 'POST', body: { ...form, birth: birthPayload(birth) } })
+      const selectedPlanObj = plans.find(p => p.code === form.selectedPlan)
+      const payload = {
+        ...form,
+        selectedPlan: form.selectedPlan || null,
+        selectedPlanName: selectedPlanObj ? selectedPlanObj.name : null,
+        birth: birthPayload(birth)
+      }
+      const res = await api('/api/auth/start', { method: 'POST', body: payload })
       setDone(res)
       setStep('done')
     } catch (ex) { setErr(ex.message) }
@@ -152,6 +166,21 @@ export default function Start() {
                   />
                 </label>
               )}
+
+              <label className="span-2">
+                Interested Plan (Optional)
+                <select
+                  value={form.selectedPlan}
+                  onChange={(e) => setForm({ ...form, selectedPlan: e.target.value })}
+                >
+                  <option value="">Select a Consultation Plan (Optional)</option>
+                  {plans.map(p => (
+                    <option key={p.code} value={p.code}>
+                      {p.name} {p.priceInr ? `(₹${p.priceInr.toLocaleString('en-IN')})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <BirthFields value={birth} onChange={setBirth} />
             {err && <p className="err">{err}</p>}

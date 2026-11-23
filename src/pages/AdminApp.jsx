@@ -288,12 +288,12 @@ function Overview() {
     return { source: src, total: list.length, converted, convRate }
   })
 
-  // Compute monthly trend for the last 4 months
+  // Compute monthly trend for the last 4 months using local timezone keys
   const months = []
   const now = new Date()
   for (let i = 3; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const key = d.toISOString().substring(0, 7) // "YYYY-MM"
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` // "YYYY-MM"
     const label = d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
     const custCount = customers.filter(c => (c.createdAt || '').startsWith(key)).length
     const convCount = customers.filter(c => (c.convertedAt || '').startsWith(key) || (c.leadStatus === 'CONVERTED' && (c.createdAt || '').startsWith(key))).length
