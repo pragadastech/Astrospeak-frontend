@@ -309,32 +309,48 @@ textarea {
   font-size: 0.88rem;
 }
 
-/* Sticker Badge on Recommended Plan Card */
+/* Sticker Badge on Recommended Plan Card - Cross corner diagonal ribbon */
 .sticker-badge {
   position: absolute;
-  top: -12px;
-  right: 20px;
+  top: 22px;
+  right: -38px;
+  width: 150px;
+  text-align: center;
   z-index: 25;
   background: linear-gradient(135deg, var(--orange), #ff4800);
   color: #ffffff;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.68rem;
+  padding: 4px 0;
+  transform: rotate(45deg);
+  transform-origin: center;
+  font-size: 0.54rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  box-shadow: 0 4px 14px rgba(255, 72, 0, 0.4);
-  border: 2px solid #ffffff;
-  display: inline-flex;
+  box-shadow: 0 4px 12px rgba(255, 72, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
   pointer-events: none;
   line-height: 1.2;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+.sticker-badge span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+}
+.plan-card.featured {
+  overflow: hidden;
+  position: relative;
+}
 .plan-card:hover .sticker-badge {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 6px 18px rgba(255, 72, 0, 0.5);
+  transform: rotate(45deg) scale(1.05);
+  box-shadow: 0 6px 16px rgba(255, 72, 0, 0.45);
 }
 
 /* Search & Jump Highlight Flash Animation */

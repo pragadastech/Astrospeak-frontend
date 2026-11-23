@@ -27,7 +27,7 @@ export default function PlanGrid({ plans, onPick, region, onRegion }) {
           <Reveal key={p.code} delay={i * 80} as="article" id={`plan-${(p.code || '').toLowerCase()}`} className={p.recommended ? 'plan-card featured hoverable zoom' : 'plan-card hoverable'}>
             {p.recommended && (
               <div className="sticker-badge" aria-label="Recommended plan">
-                <span>⭐ RECOMMENDED</span>
+                <span>★ RECOMMENDED</span>
               </div>
             )}
             <div className="plan-card-inner" onPointerMove={tilt} onPointerLeave={untilt}>
